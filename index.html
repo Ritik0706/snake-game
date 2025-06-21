@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Snake Game</title>
+		<style>
+			canvas {
+				background-color: #000000;
+				display: block;
+				margin: 0 auto;
+			}
+
+			.button-container {
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				margin: 10px;
+			}
+
+			.button-container button,
+			.button-container h2 {
+				padding: 10px 20px;
+				margin: 5px;
+			}
+
+			.button-container button:hover {
+				background-color: #ffeb3b;
+				transform: scale(1.1);
+			}
+
+			.game-over-popup {
+				display: none;
+				position: fixed;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				padding: 20px;
+				background-color: white;
+				border: 2px solid #000;
+				text-align: center;
+				font-size: 24px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="button-container">
+			<button onclick="increaseSpeed()">Increase Speed</button>
+			<h2>🌟🐍✨ Snake Game 🌟🐍✨</h2>
+			<button onclick="decreaseSpeed()">Decrease Speed</button>
+		</div>
+		<canvas id="gameCanvas" width="800" height="600"></canvas>
+		<div id="gameOver" class="game-over-popup">
+			Game Over
+			<button class="close-btn" onclick="closePopup()">X</button>
+		</div>
+		<script>
+			const canvas = document.getElementById('gameCanvas');
+			const ctx = canvas.getContext('2d');
+			const gameOverPopup = document.getElementById('gameOver');
+
+			const grid = 20;
+			let count = 0;
+			let speed = 4;
+			let gameOver = false;
+
+			let snake = {
+				x: 160,
+				y: 160,
+				dx: grid,
+				dy: 0,
+				cells: [],
+				maxCells: 4,
+			};
+
+			let apple = {
+				x: 320,
+				y: 320,
+			};
+
+			function getRandomInt(min, max) {
+				return Math.floor(Math.random() * (max - min)) + min;
+			}
+
+			function gameLoop() {
+				if (!gameOver) {
+					requestAnimationFrame(gameLoop);
+				}
+
+				if (++count < speed) {
+					return;
+				}
+
+				count = 0;
+				ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+				snake.x += snake.dx;
+				snake.y += snake.dy;
+
+				if (snake.x < 0) {
+					snake.x = canvas.width - grid;
+				} else if (snake.x >= canvas.width) {
+					snake.x = 0;
+				}
+
+				if (snake.y < 0) {
+					snake.y = canvas.height - grid;
+				} else if (snake.y >= canvas.height) {
+					snake.y = 0;
+				}
+
+				snake.cells.unshift({ x: snake.x, y: snake.y });
+
+				if (snake.cells.length > snake.maxCells) {
+					snake.cells.pop();
+				}
+
+				ctx.fillStyle = 'red';
+				ctx.fillRect(apple.x, apple.y, grid - 1, grid - 1);
+
+				ctx.fillStyle = 'green';
+				snake.cells.forEach(function (cell, index) {
+					ctx.fillRect(cell.x, cell.y, grid - 1, grid - 1);
+
+					if (cell.x === apple.x && cell.y === apple.y) {
+						snake.maxCells++;
+						apple.x = getRandomInt(0, 25) * grid;
+						apple.y = getRandomInt(0, 25) * grid;
+					}
+
+					for (let i = index + 1; i < snake.cells.length; i++) {
+						if (cell.x === snake.cells[i].x && cell.y === snake.cells[i].y) {
+							gameOver = true;
+							gameOverPopup.style.display = 'block';
+						}
+					}
+				});
+			}
+
+			function closePopup() {
+				gameOverPopup.style.display = 'none';
+				gameOver = false;
+				snake = { x: 160, y: 160, dx: grid, dy: 0, cells: [], maxCells: 4 };
+				apple = {
+					x: getRandomInt(0, 25) * grid,
+					y: getRandomInt(0, 25) * grid,
+				};
+				requestAnimationFrame(gameLoop);
+			}
+
+			function increaseSpeed() {
+				if (speed > 1) {
+					speed--;
+				}
+			}
+
+			function decreaseSpeed() {
+				speed++;
+			}
+
+			document.addEventListener('keydown', function (e) {
+				if (gameOver) {
+					closePopup();
+				} else {
+					if (e.key === 'ArrowLeft' && snake.dx === 0) {
+						snake.dx = -grid;
+						snake.dy = 0;
+					} else if (e.key === 'ArrowUp' && snake.dy === 0) {
+						snake.dy = -grid;
+						snake.dx = 0;
+					} else if (e.key === 'ArrowRight' && snake.dx === 0) {
+						snake.dx = grid;
+						snake.dy = 0;
+					} else if (e.key === 'ArrowDown' && snake.dy === 0) {
+						snake.dy = grid;
+						snake.dx = 0;
+					}
+				}
+			});
+
+			requestAnimationFrame(gameLoop);
+		</script>
+	</body>
+</html>
